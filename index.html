@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 法律/合同工具导航站（法务工作台）｜工作流·任务·合规清单</title>
+  <meta name="description" content="AI 法务工作台：把条款解读、合同模板、合规清单与案例检索串成可复用流程，配套任务与合规自检。本地收藏/最近使用；纯前端单页可直接部署。" />
+  <meta property="og:title" content="AI 法务工作台" />
+  <meta property="og:description" content="工作流·任务·合规清单：把法务交付做成闭环。" />
+  <meta property="og:type" content="website" />
+  <style>
+    :root{
+      --bg:#070a12;
+      --panel:#0b1222;
+      --panel2:#0f172a;
+      --text:#e6edf7;
+      --muted: rgba(230,237,247,.68);
+      --line: rgba(230,237,247,.12);
+      --shadow:0 12px 34px rgba(0,0,0,.40);
+      --accent:#fbbf24;
+      --accent2:#60a5fa;
+      --warn:#fbbf24;
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(251,191,36,.18), transparent 60%),
+        radial-gradient(900px 500px at 100% 0%, rgba(96,165,250,.14), transparent 55%),
+        radial-gradient(900px 500px at 0% 100%, rgba(34,197,94,.10), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      line-height:1.5;
+    }
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit}
+    .layout{
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 14px;
+      display:grid;
+      grid-template-columns: 320px 1fr;
+      gap: 14px;
+      min-height: 100vh;
+    }
+    @media (max-width: 980px){
+      .layout{grid-template-columns: 1fr}
+    }
+    .panel{
+      border:1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(15,23,42,.60);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .sidebar{
+      position: sticky;
+      top: 12px;
+      align-self: start;
+      border-radius: 18px;
+      background:
+        radial-gradient(720px 420px at 14% 10%, rgba(251,191,36,.18), transparent 60%),
+        radial-gradient(620px 420px at 86% 14%, rgba(96,165,250,.16), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
+    }
+    @media (max-width: 980px){.sidebar{position: relative; top: 0}}
+    .side-h{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(230,237,247,.10);
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{
+      width:38px;height:38px;border-radius:16px;
+      background:
+        radial-gradient(12px 12px at 30% 30%, rgba(255,255,255,.20), transparent 62%),
+        linear-gradient(135deg, rgba(251,191,36,1), rgba(96,165,250,.92));
+      box-shadow: 0 18px 44px rgba(251,191,36,.12);
+      flex: 0 0 auto;
+    }
+    .brand-text{display:flex;flex-direction:column;line-height:1.1}
+    .brand-title{font-weight:980;letter-spacing:.2px}
+    .brand-sub{margin-top:2px;color: var(--muted);font-size:12px}
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;
+      font-size:12px;
+      color: rgba(230,237,247,.86);
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      border-radius: 999px;
+      padding: 6px 10px;
+      white-space:nowrap;
+    }
+    .side-b{padding: 12px 14px 14px}
+    .search{
+      display:flex;gap:10px;flex-wrap:wrap;
+      padding: 12px;
+      border-radius: 16px;
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+    }
+    .input{
+      flex: 1;
+      min-width: 180px;
+      border:1px solid rgba(230,237,247,.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(2,6,23,.46);
+      outline: none;
+      color: var(--text);
+    }
+    .input:focus{border-color: rgba(251,191,36,.34); box-shadow: 0 0 0 4px rgba(251,191,36,.12)}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      color: rgba(230,237,247,.92);
+      border-radius:999px;
+      padding:10px 12px;
+      font-size:13px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .btn:hover{transform: translateY(-1px); border-color: rgba(251,191,36,.22); background: rgba(255,255,255,.10)}
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(251,191,36,1), rgba(96,165,250,.92));
+      color:#041019;
+      border-color: rgba(251,191,36,.24);
+      font-weight:980;
+    }
+    .btn.ghost{background:transparent}
+    .mini{
+      display:inline-flex;align-items:center;justify-content:center;
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      color: rgba(230,237,247,.92);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .mini:hover{transform: translateY(-1px); border-color: rgba(251,191,36,.22); background: rgba(255,255,255,.10)}
+    .mini.primary{
+      background: linear-gradient(135deg, rgba(251,191,36,1), rgba(96,165,250,.92));
+      color:#041019;
+      border-color: rgba(251,191,36,.24);
+      font-weight:980;
+    }
+    .hint{margin-top: 8px;color: var(--muted);font-size: 12px}
+    .adbox{
+      border-radius: 16px;
+      border:1px dashed rgba(251,191,36,.30);
+      background:
+        radial-gradient(520px 240px at 16% 10%, rgba(251,191,36,.16), transparent 60%),
+        radial-gradient(520px 240px at 86% 10%, rgba(96,165,250,.14), transparent 60%),
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .adbox .t{font-weight:980}
+    .adbox .d{color: var(--muted);font-size:12px;margin-top:4px;line-height:1.6}
+    .adbox .a{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .side-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top: 12px}
+    .side-nav{display:flex;flex-direction:column;gap:8px;margin-top: 12px}
+    .navbtn{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 10px 12px;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .navbtn:hover{transform: translateY(-1px); border-color: rgba(251,191,36,.22); background: rgba(255,255,255,.10)}
+    .navleft{display:flex;align-items:center;gap:10px}
+    .ic{
+      width:34px;height:34px;border-radius: 14px;
+      display:flex;align-items:center;justify-content:center;
+      background: radial-gradient(10px 10px at 30% 30%, rgba(255,255,255,.18), transparent 62%),
+        linear-gradient(135deg, rgba(251,191,36,.92), rgba(96,165,250,.86));
+      color:#041019;font-weight: 980;
+      box-shadow: 0 18px 44px rgba(251,191,36,.10);
+      flex: 0 0 auto;
+    }
+    .tag{
+      font-size: 11px;
+      color: rgba(230,237,247,.88);
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      padding: 5px 8px;
+      border-radius: 999px;
+      white-space:nowrap;
+    }
+    .nt{font-weight:980}
+    .ns{color: var(--muted);font-size:12px;margin-top:2px}
+    .main{
+      border-radius: 18px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(230,237,247,.12);
+      box-shadow: 0 22px 70px rgba(0,0,0,.45);
+      overflow:hidden;
+    }
+    .top{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(230,237,247,.10);
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.06));
+    }
+    .ttl{font-weight:980}
+    .sub{color: var(--muted);font-size:12px;margin-top:4px;line-height:1.6}
+    .content{padding: 12px 14px 14px; display:flex; flex-direction:column; gap:12px}
+    .section{
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(11,18,34,.62);
+      border-radius: 18px;
+      overflow:hidden;
+    }
+    .sh{
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid rgba(230,237,247,.10);
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+    }
+    .sb{padding: 12px}
+    .two{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    @media (max-width: 980px){.two{grid-template-columns: 1fr}}
+    .box{
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(15,23,42,.55);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .box .h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .box .small{color: rgba(230,237,247,.72); font-size:12px; margin-top:6px; line-height:1.6}
+    .list{margin:10px 0 0; padding-left: 18px; color: rgba(230,237,247,.86)}
+    .list li{margin: 6px 0}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:7px 10px;border-radius:999px;
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      color: rgba(230,237,247,.86);
+      font-size:12px;
+      user-select:none;
+    }
+    .toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 18px;
+      background: rgba(2,6,23,.85);
+      border: 1px solid rgba(230,237,247,.16);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      color: rgba(230,237,247,.95);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 60;
+      max-width: calc(100vw - 24px);
+      text-align:center;
+    }
+    .toast.show{opacity:1; transform: translateX(-50%) translateY(-6px)}
+    .right-ad{
+      position: fixed;
+      right: 14px;
+      top: 120px;
+      z-index: 30;
+      width: 210px;
+      border: 1px solid rgba(230,237,247,.12);
+      border-radius: 16px;
+      background: rgba(11,18,34,.68);
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    .right-ad-head{
+      padding: 10px 10px 0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .right-ad-title{font-weight:980;font-size:13px;color: rgba(230,237,247,.92)}
+    .right-ad-body{padding: 10px}
+    .right-ad-body p{margin:0;color: rgba(230,237,247,.72);font-size:12px;line-height:1.55}
+    .right-ad-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .right-ad .mini{padding:7px 10px}
+    @media (max-width: 1220px){
+      .right-ad{display:none}
+    }
+  </style>
+</head>
+<body>
+  <aside class="right-ad" aria-label="右侧广告">
+    <div class="right-ad-head">
+      <div class="right-ad-title">sproidc 服务器方案</div>
+      <span class="badge">赞助</span>
+    </div>
+    <div class="right-ad-body">
+      <p>更适合“长期运行 + 定时检索/同步”的法务场景：案例更新订阅、文书归档、检索入口对外访问。</p>
+      <div class="right-ad-actions">
+        <a class="mini primary" href="https://www.sproidc.com/" target="_blank" rel="noopener noreferrer" data-event="ad_right_primary">查看配置</a>
+        <a class="mini" href="https://www.sproidc.com/" target="_blank" rel="noopener noreferrer" data-event="ad_right_secondary">进入官网</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="layout">
+    <aside class="panel sidebar" aria-label="侧栏">
+      <div class="side-h">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="brand-text">
+            <div class="brand-title">AI 法务工作台</div>
+            <div class="brand-sub">工作流 · 任务 · 合规清单</div>
+          </div>
+        </div>
+        <div class="badge">law3</div>
+      </div>
+
+      <div class="side-b">
+        <div class="adbox" aria-label="广告位">
+          <div class="t">1bgp 全球云服务器 / 物理服务器</div>
+          <div class="d">适合部署条款库、合同模板站、合规清单工作台；也可以搭建“龙虾站”引流页，或对接 ChatGPT 做法务助手。</div>
+          <div class="a">
+            <a class="mini primary" href="https://www.1bgp.com/" target="_blank" rel="noopener noreferrer" data-event="ad_side_primary">查看方案</a>
+            <a class="mini" href="https://www.1bgp.com/" target="_blank" rel="noopener noreferrer" data-event="ad_side_secondary">进入官网</a>
+          </div>
+        </div>
+
+        <div class="search" role="search">
+          <input class="input" id="q" placeholder="搜索：条款/模板/合规/案例/送达/仲裁/验收/违约…" autocomplete="off" />
+          <button class="btn" id="clear" type="button" data-event="search_clear">清空</button>
+        </div>
+        <div class="hint">侧栏用于导航；主区提供工作流与工具入口。本地收藏/最近使用仅保存在浏览器。</div>
+
+        <div class="side-actions">
+          <button class="btn ghost" id="showFavs" type="button" data-event="side_favs">只看收藏</button>
+          <button class="btn primary" id="open1bgp" type="button" data-event="side_1bgp">部署到 1bgp</button>
+        </div>
+
+        <div class="side-nav" aria-label="快捷导航">
+          <a class="navbtn" href="#law3-workflow" data-event="side_workflow">
+            <div class="navleft">
+              <div class="ic" aria-hidden="true">流</div>
+              <div>
+                <div class="nt">法务工作流</div>
+                <div class="ns">拆条款→列风险→证据→类案</div>
+              </div>
+            </div>
+            <span class="tag">SOP</span>
+          </a>
+          <a class="navbtn" href="#law3-tasks" data-event="side_tasks">
+            <div class="navleft">
+              <div class="ic" aria-hidden="true">务</div>
+              <div>
+                <div class="nt">任务清单</div>
+                <div class="ns">本地保存 · 轻量闭环</div>
+              </div>
+            </div>
+            <span class="tag">todo</span>
+          </a>
+          <a class="navbtn" href="#law3-check" data-event="side_check">
+            <div class="navleft">
+              <div class="ic" aria-hidden="true">清</div>
+              <div>
+                <div class="nt">合规清单</div>
+                <div class="ns">不漏项自检</div>
+              </div>
+            </div>
+            <span class="tag">check</span>
+          </a>
+          <a class="navbtn" href="#law3-tools" data-event="side_tools">
+            <div class="navleft">
+              <div class="ic" aria-hidden="true">工</div>
+              <div>
+                <div class="nt">工具入口</div>
+                <div class="ns">搜索 · 收藏 · 最近</div>
+              </div>
+            </div>
+            <span class="tag">tools</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main" aria-label="主内容">
+      <div class="top">
+        <div>
+          <div class="ttl">把“条款风险”变成“可交付清单”</div>
+          <div class="sub">用 AI 辅助拆解与改写，用清单统一口径，用类案对照校准风险点。本站仅提供工具导航，不构成法律意见。</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <span class="chip">本地收藏</span>
+          <span class="chip">本地最近</span>
+          <span class="chip">任务/清单</span>
+        </div>
+      </div>
+
+      <div class="content">
+        <section class="section" id="law3-workflow" aria-label="工作流">
+          <div class="sh">
+            <div>
+              <div class="ttl">法务工作流（AI+合同）</div>
+              <div class="sub">把每一步写成“输入 → 产出 → 证据”，交付更稳定。</div>
+            </div>
+            <span class="badge">SOP</span>
+          </div>
+          <div class="sb">
+            <div class="two">
+              <div class="box">
+                <div class="h">
+                  <div class="ttl">1) 场景与交易结构</div>
+                  <button class="mini" type="button" id="copyScope" data-event="copy_scope">复制要点</button>
+                </div>
+                <div class="small">先明确交易结构与关键约束：主体、标的、里程碑、预算、期限、交付边界。</div>
+                <ul class="list">
+                  <li>主体：谁对谁承担义务（含关联方）</li>
+                  <li>标的：服务/产品/授权范围与边界</li>
+                  <li>交付：里程碑、验收标准、材料清单</li>
+                </ul>
+              </div>
+              <div class="box">
+                <div class="h">
+                  <div class="ttl">2) 条款拆解与风险点</div>
+                  <button class="mini" type="button" id="copyClause" data-event="copy_clause">复制提示词</button>
+                </div>
+                <div class="small">把条款拆成义务/条件/例外/期限/证据/违约后果，并指出不可执行或不对等。</div>
+                <ul class="list">
+                  <li>风险：不可验收、不可送达、缺兜底</li>
+                  <li>改写：把“口头承诺”写成“可验证条款”</li>
+                  <li>证据：约定留痕与材料归档</li>
+                </ul>
+              </div>
+              <div class="box">
+                <div class="h">
+                  <div class="ttl">3) 合规清单自检</div>
+                  <button class="mini" type="button" id="copyCheck" data-event="copy_check">复制清单</button>
+                </div>
+                <div class="small">用清单补漏：数据/隐私、营销、用工、供应商尽调等。</div>
+                <ul class="list">
+                  <li>数据：授权、最小化、留痕、跨境</li>
+                  <li>宣传：用语、资质、免责声明</li>
+                  <li>尽调：主体资质与合规记录</li>
+                </ul>
+              </div>
+              <div class="box">
+                <div class="h">
+                  <div class="ttl">4) 类案对照与版本留痕</div>
+                  <button class="mini" type="button" id="copyCase" data-event="copy_case">复制关键词</button>
+                </div>
+                <div class="small">查同类争议点：案由+要件+裁判理由关键词，并把改动留痕可追溯。</div>
+                <ul class="list">
+                  <li>类案：同案由/同争议点/同证据争议</li>
+                  <li>要旨：法院怎么认定、怎么举证</li>
+                  <li>留痕：版本命名、变更记录、审批流</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="law3-tasks" aria-label="任务清单">
+          <div class="sh">
+            <div>
+              <div class="ttl">法务任务（本地保存）</div>
+              <div class="sub">把交付拆成可执行动作：每完成一步就能复盘与对照。</div>
+            </div>
+            <span class="badge">todo</span>
+          </div>
+          <div class="sb">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <input class="input" id="taskInput" placeholder="新增任务：例如『SaaS服务合同：拆条款+风险清单+类案对照』" />
+              <button class="btn primary" id="addTask" type="button" data-event="add_task">添加</button>
+              <button class="btn" id="clearDone" type="button" data-event="clear_done">清除已完成</button>
+            </div>
+            <div id="taskList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px"></div>
+          </div>
+        </section>
+
+        <section class="section" id="law3-check" aria-label="合规清单">
+          <div class="sh">
+            <div>
+              <div class="ttl">合规清单（本地保存）</div>
+              <div class="sub">把容易漏掉的项写成清单：打勾即完成，便于交付复核。</div>
+            </div>
+            <span class="badge">check</span>
+          </div>
+          <div class="sb">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <input class="input" id="checkInput" placeholder="新增清单项：例如『约定验收材料与留痕方式』" />
+              <button class="btn primary" id="addCheck" type="button" data-event="add_check">添加</button>
+              <button class="btn" id="resetCheck" type="button" data-event="reset_check">恢复默认清单</button>
+            </div>
+            <div id="checkList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px"></div>
+          </div>
+        </section>
+
+        <section class="section" id="law3-tools" aria-label="工具入口">
+          <div class="sh">
+            <div>
+              <div class="ttl">工具入口（可收藏）</div>
+              <div class="sub">按关键词搜索并收藏；点击访问会自动记录“最近使用”。</div>
+            </div>
+            <span class="badge">tools</span>
+          </div>
+          <div class="sb">
+            <div id="toolGrid" style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const EVENT_PREFIX = "law3_";
+    const LS_KEY = "ailaw3:favs";
+    const REC_KEY = "ailaw3:recent";
+    const TASK_KEY = "ailaw3:tasks";
+    const CHECK_KEY = "ailaw3:checks";
+
+    const tools = [
+      { name: "ChatGPT", desc: "通用对话与写作助手，适合内容生成与问题解答。", url: "https://chat.openai.com", cat: "对话/助手", tags: ["写作","问答","通用"], icon: "https://www.iliudar.com/api/icon?url=https%3A%2F%2Fchat.openai.com&v=2" },
+      { name: "Kimi", desc: "长文阅读与写作助手，适合总结资料、写方案与对话。", url: "https://kimi.moonshot.cn", cat: "对话/助手", tags: ["长文","总结","中文"], icon: "https://www.iliudar.com/api/icon?url=https%3A%2F%2Fstatics.moonshot.cn%2Fkimi-web-seo%2Ffavicon.ico&v=2" },
+      { name: "豆包", desc: "面向日常办公与内容生成的对话助手。", url: "https://www.doubao.com", cat: "对话/助手", tags: ["中文","办公","写作"], icon: "https://lf-flow-web-cdn.doubao.com/obj/flow-doubao/doubao/web/static/image/OnboardingAvatar.bb1504ee.webp" },
+      { name: "通义千问", desc: "通用对话与创作助手，覆盖写作、问答与办公。", url: "https://tongyi.aliyun.com", cat: "对话/助手", tags: ["中文","通用","办公"], icon: "https://www.iliudar.com/api/icon?url=https%3A%2F%2Ftongyi.aliyun.com&v=2" },
+      { name: "Claude", desc: "长文本理解与总结表现突出，适合报告与资料整理。", url: "https://claude.ai", cat: "对话/助手", tags: ["总结","长文","分析"], icon: "https://www.iliudar.com/api/icon?url=https%3A%2F%2Fclaude.ai&v=2" },
+      { name: "Gemini", desc: "多模态能力强，适合搜索式问答与内容辅助。", url: "https://gemini.google.com", cat: "对话/助手", tags: ["多模态","问答","办公"], icon: "https://www.iliudar.com/api/icon?url=https%3A%2F%2Fgemini.google.com&v=2" },
+      { name: "Perplexity", desc: "检索增强问答，适合快速查资料与引用。", url: "https://www.perplexity.ai", cat: "对话/助手", tags: ["检索","引用","快速"] },
+      { name: "Notion AI", desc: "知识库与写作结合，适合团队文档与 SOP。", url: "https://www.notion.so/product/ai", cat: "办公/知识库", tags: ["文档","SOP","协作"] },
+      { name: "飞书智能助手", desc: "协作办公场景更顺手，适合企业内部流程。", url: "https://www.feishu.cn", cat: "办公/知识库", tags: ["协作","会议","企业"] },
+      { name: "Gamma", desc: "一键生成演示文稿，适合汇报与路演。", url: "https://gamma.app", cat: "办公/知识库", tags: ["PPT","汇报","排版"] },
+      { name: "Tome", desc: "故事化演示与页面生成，适合营销与提案。", url: "https://tome.app", cat: "办公/知识库", tags: ["提案","演示","营销"] }
+    ];
+
+    const DEFAULT_CHECKS = [
+      { text: "明确合同主体与授权链条（含盖章/签署权限）", done: false },
+      { text: "交付范围与边界写清：不做什么也要写清", done: false },
+      { text: "验收标准可验证：材料/口径/期限/不合格处理", done: false },
+      { text: "付款条件绑定验收证据：避免口头承诺", done: false },
+      { text: "保密/知识产权/数据处理边界明确", done: false },
+      { text: "违约责任可执行：额度/触发条件/举证材料", done: false },
+      { text: "送达条款与留痕方式明确（邮箱/地址/系统）", done: false },
+      { text: "争议解决条款可落地：管辖/仲裁/保全", done: false }
+    ];
+
+    const state = { q: "", favOnly: false, favs: new Set() };
+    const els = {
+      q: document.getElementById("q"),
+      clear: document.getElementById("clear"),
+      showFavs: document.getElementById("showFavs"),
+      open1bgp: document.getElementById("open1bgp"),
+      toolGrid: document.getElementById("toolGrid"),
+      toast: document.getElementById("toast"),
+      taskInput: document.getElementById("taskInput"),
+      addTask: document.getElementById("addTask"),
+      clearDone: document.getElementById("clearDone"),
+      taskList: document.getElementById("taskList"),
+      checkInput: document.getElementById("checkInput"),
+      addCheck: document.getElementById("addCheck"),
+      resetCheck: document.getElementById("resetCheck"),
+      checkList: document.getElementById("checkList"),
+      copyScope: document.getElementById("copyScope"),
+      copyClause: document.getElementById("copyClause"),
+      copyCheck: document.getElementById("copyCheck"),
+      copyCase: document.getElementById("copyCase")
+    };
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function normalize(s){return (s || "").toLowerCase().trim();}
+    function toast(msg){
+      els.toast.textContent = msg;
+      els.toast.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => els.toast.classList.remove("show"), 1600);
+    }
+    function track(el){
+      const ev = el?.dataset?.event;
+      if(!ev) return;
+      window.__events = window.__events || [];
+      window.__events.push({ event: EVENT_PREFIX + ev, ts: Date.now() });
+    }
+    function loadJson(key, fallback){
+      try{
+        const raw = localStorage.getItem(key);
+        if(!raw) return fallback;
+        const v = JSON.parse(raw);
+        return v ?? fallback;
+      }catch(_){return fallback;}
+    }
+    function saveJson(key, value){
+      try{ localStorage.setItem(key, JSON.stringify(value)); }catch(_){}
+    }
+    function loadFavs(){
+      const arr = loadJson(LS_KEY, []);
+      if(Array.isArray(arr)) state.favs = new Set(arr.filter(Boolean));
+    }
+    function saveFavs(){
+      saveJson(LS_KEY, Array.from(state.favs));
+    }
+    function loadRecents(){ return loadJson(REC_KEY, []).filter(Boolean); }
+    function pushRecent(name){
+      if(!name) return;
+      const list = loadRecents();
+      const next = [name, ...list.filter(x => x !== name)].slice(0, 12);
+      saveJson(REC_KEY, next);
+    }
+    function toolMatches(t){
+      if(state.favOnly && !state.favs.has(t.name)) return false;
+      const q = state.q;
+      if(!q) return true;
+      const hay = [t.name, t.desc, ...(t.tags || [])].join(" ").toLowerCase();
+      return hay.includes(q);
+    }
+    function renderTools(){
+      const list = tools.filter(toolMatches);
+      els.toolGrid.innerHTML = list.map(t => {
+        const fav = state.favs.has(t.name);
+        return `
+          <div class="box" style="padding:12px; display:flex; flex-direction:column; gap:10px">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px">
+              <div style="min-width:0">
+                <div style="font-weight:980; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${escapeHtml(t.name)}</div>
+                <div class="small">${escapeHtml(t.desc || "")}</div>
+              </div>
+              <button class="mini" type="button" data-fav="${escapeHtml(t.name)}" data-event="fav_toggle" aria-pressed="${fav ? "true" : "false"}">${fav ? "★" : "☆"}</button>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap">
+              <a class="mini primary" href="${escapeHtml(t.url)}" target="_blank" rel="noopener noreferrer" data-tool="${escapeHtml(t.name)}" data-event="tool_open">访问</a>
+              <button class="mini" type="button" data-copy="${escapeHtml(t.name)}｜${escapeHtml(t.url)}" data-event="tool_copy">复制</button>
+            </div>
+          </div>
+        `;
+      }).join("") || `<div class="hint">没有匹配结果，尝试换关键词或取消“只看收藏”。</div>`;
+
+      els.toolGrid.querySelectorAll('[data-fav]').forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          track(e.currentTarget);
+          const name = e.currentTarget.getAttribute("data-fav");
+          if(!name) return;
+          if(state.favs.has(name)) state.favs.delete(name);
+          else state.favs.add(name);
+          saveFavs();
+          renderTools();
+          toast(state.favs.has(name) ? "已收藏" : "已取消收藏");
+        });
+      });
+
+      els.toolGrid.querySelectorAll('[data-event="tool_open"]').forEach(a => {
+        a.addEventListener("click", (e) => {
+          track(e.currentTarget);
+          const name = e.currentTarget.getAttribute("data-tool") || "";
+          pushRecent(name);
+        });
+      });
+
+      els.toolGrid.querySelectorAll('[data-event="tool_copy"]').forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          track(e.currentTarget);
+          const text = e.currentTarget.getAttribute("data-copy") || "";
+          try{
+            await navigator.clipboard.writeText(text);
+            toast("已复制到剪贴板");
+          }catch(_){
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.left = "-9999px";
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+            toast("已复制到剪贴板");
+          }
+        });
+      });
+    }
+    function renderTasks(){
+      const tasks = loadJson(TASK_KEY, []);
+      const list = Array.isArray(tasks) ? tasks : [];
+      els.taskList.innerHTML = list.map((t, idx) => `
+        <div class="box" style="padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px">
+          <div style="display:flex; align-items:center; gap:10px; min-width:0">
+            <input type="checkbox" ${t.done ? "checked" : ""} data-idx="${idx}" data-event="task_toggle" />
+            <div style="min-width:0">
+              <div style="font-weight:980; text-decoration:${t.done ? "line-through" : "none"}; color:${t.done ? "rgba(230,237,247,.62)" : "rgba(230,237,247,.92)"}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${escapeHtml(t.text)}</div>
+              <div class="small">建议：完成后留存证据链与版本记录。</div>
+            </div>
+          </div>
+          <button class="mini" type="button" data-del="${idx}" data-event="task_del">删除</button>
+        </div>
+      `).join("") || `<div class="hint">还没有任务。把一次合同审阅拆成 3-5 个可交付动作，会更好推进。</div>`;
+
+      els.taskList.querySelectorAll('[data-event="task_toggle"]').forEach(chk => {
+        chk.addEventListener("change", (e) => {
+          track(e.currentTarget);
+          const idx = Number(e.currentTarget.getAttribute("data-idx"));
+          const tasks2 = loadJson(TASK_KEY, []);
+          if(!Array.isArray(tasks2) || Number.isNaN(idx) || !tasks2[idx]) return;
+          tasks2[idx].done = !!e.currentTarget.checked;
+          saveJson(TASK_KEY, tasks2);
+          renderTasks();
+        });
+      });
+      els.taskList.querySelectorAll('[data-event="task_del"]').forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          track(e.currentTarget);
+          const idx = Number(e.currentTarget.getAttribute("data-del"));
+          const tasks2 = loadJson(TASK_KEY, []);
+          if(!Array.isArray(tasks2) || Number.isNaN(idx)) return;
+          tasks2.splice(idx, 1);
+          saveJson(TASK_KEY, tasks2);
+          renderTasks();
+          toast("已删除");
+        });
+      });
+    }
+    function ensureChecks(){
+      const v = loadJson(CHECK_KEY, null);
+      if(Array.isArray(v) && v.length) return v;
+      saveJson(CHECK_KEY, DEFAULT_CHECKS);
+      return DEFAULT_CHECKS;
+    }
+    function renderChecks(){
+      const list = ensureChecks();
+      els.checkList.innerHTML = list.map((c, idx) => `
+        <div class="box" style="padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px">
+          <div style="display:flex; align-items:flex-start; gap:10px; min-width:0">
+            <input type="checkbox" ${c.done ? "checked" : ""} data-idx="${idx}" data-event="check_toggle" />
+            <div style="min-width:0">
+              <div style="font-weight:900; text-decoration:${c.done ? "line-through" : "none"}; color:${c.done ? "rgba(230,237,247,.62)" : "rgba(230,237,247,.92)"}">${escapeHtml(c.text)}</div>
+              <div class="small">提示：能落到“材料/口径/期限/留痕”的项优先写清。</div>
+            </div>
+          </div>
+          <button class="mini" type="button" data-del="${idx}" data-event="check_del">删除</button>
+        </div>
+      `).join("");
+
+      els.checkList.querySelectorAll('[data-event="check_toggle"]').forEach(chk => {
+        chk.addEventListener("change", (e) => {
+          track(e.currentTarget);
+          const idx = Number(e.currentTarget.getAttribute("data-idx"));
+          const arr = loadJson(CHECK_KEY, DEFAULT_CHECKS);
+          if(!Array.isArray(arr) || Number.isNaN(idx) || !arr[idx]) return;
+          arr[idx].done = !!e.currentTarget.checked;
+          saveJson(CHECK_KEY, arr);
+          renderChecks();
+        });
+      });
+      els.checkList.querySelectorAll('[data-event="check_del"]').forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          track(e.currentTarget);
+          const idx = Number(e.currentTarget.getAttribute("data-del"));
+          const arr = loadJson(CHECK_KEY, DEFAULT_CHECKS);
+          if(!Array.isArray(arr) || Number.isNaN(idx)) return;
+          arr.splice(idx, 1);
+          saveJson(CHECK_KEY, arr);
+          renderChecks();
+          toast("已删除");
+        });
+      });
+    }
+
+    function copyText(text){
+      try{
+        navigator.clipboard.writeText(text);
+        toast("已复制");
+      }catch(_){
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        toast("已复制");
+      }
+    }
+
+    function init(){
+      loadFavs();
+      ensureChecks();
+      renderTools();
+      renderTasks();
+      renderChecks();
+
+      els.q.addEventListener("input", () => {
+        state.q = normalize(els.q.value);
+        renderTools();
+      });
+      els.clear.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        els.q.value = "";
+        state.q = "";
+        renderTools();
+        toast("已清空搜索");
+      });
+      els.showFavs.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        state.favOnly = !state.favOnly;
+        els.showFavs.textContent = state.favOnly ? "显示全部" : "只看收藏";
+        renderTools();
+        toast(state.favOnly ? "仅显示收藏" : "显示全部");
+      });
+      els.open1bgp.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        window.open("https://www.1bgp.com/", "_blank", "noopener,noreferrer");
+      });
+
+      els.addTask.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        const text = (els.taskInput.value || "").trim();
+        if(!text){ toast("请输入任务内容"); return; }
+        const tasks = loadJson(TASK_KEY, []);
+        const next = Array.isArray(tasks) ? tasks : [];
+        next.unshift({ text, done: false, ts: Date.now() });
+        saveJson(TASK_KEY, next.slice(0, 60));
+        els.taskInput.value = "";
+        renderTasks();
+        toast("已添加任务");
+      });
+      els.clearDone.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        const tasks = loadJson(TASK_KEY, []);
+        const next = (Array.isArray(tasks) ? tasks : []).filter(t => !t?.done);
+        saveJson(TASK_KEY, next);
+        renderTasks();
+        toast("已清除已完成");
+      });
+
+      els.addCheck.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        const text = (els.checkInput.value || "").trim();
+        if(!text){ toast("请输入清单项"); return; }
+        const arr = loadJson(CHECK_KEY, DEFAULT_CHECKS);
+        const next = Array.isArray(arr) ? arr : [];
+        next.unshift({ text, done: false, ts: Date.now() });
+        saveJson(CHECK_KEY, next.slice(0, 80));
+        els.checkInput.value = "";
+        renderChecks();
+        toast("已添加清单项");
+      });
+      els.resetCheck.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        saveJson(CHECK_KEY, DEFAULT_CHECKS);
+        renderChecks();
+        toast("已恢复默认清单");
+      });
+
+      const scopeText = [
+        "【交易结构输入】",
+        "合同类型：",
+        "主体：甲方/乙方/关联方及签署权限：",
+        "标的：服务/产品/授权范围与边界：",
+        "交付与验收：里程碑、材料、口径、期限：",
+        "付款与发票：条件与证据绑定：",
+        "关键风险偏好：保守/平衡/激进："
+      ].join("\\n");
+      const clauseText = [
+        "请对以下合同条款进行拆解与风险扫描：",
+        "1) 列出：义务/条件/例外/期限/证据/违约后果；",
+        "2) 标注：不可执行、不可验收、权责不对等、缺兜底、送达/留痕缺失；",
+        "3) 给出：可落地的改写建议（保持原意但更可验证）；",
+        "4) 输出：需要补充的材料清单与版本留痕建议。"
+      ].join("\\n");
+      const checkText = [
+        "【合规清单模板】",
+        "数据/隐私：授权、最小化、留痕、跨境、应急响应",
+        "宣传/营销：用语、资质、免责声明、素材来源",
+        "用工：保密、竞业、培训、离职与交接",
+        "供应商：资质、履约能力、合规记录、兜底条款",
+        "交付：验收标准、材料、期限、争议处理"
+      ].join("\\n");
+      const caseText = [
+        "【类案检索关键词】",
+        "案由：",
+        "争议点（1-3条）：",
+        "要件关键词：",
+        "抗辩关键词：",
+        "证据关键词（验收/送达/版本）：",
+        "裁判理由关键词："
+      ].join("\\n");
+
+      els.copyScope.addEventListener("click", (e) => { track(e.currentTarget); copyText(scopeText); });
+      els.copyClause.addEventListener("click", (e) => { track(e.currentTarget); copyText(clauseText); });
+      els.copyCheck.addEventListener("click", (e) => { track(e.currentTarget); copyText(checkText); });
+      els.copyCase.addEventListener("click", (e) => { track(e.currentTarget); copyText(caseText); });
+
+      document.querySelectorAll('[data-event^="ad_"]').forEach(a => {
+        a.addEventListener("click", (e) => track(e.currentTarget));
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
